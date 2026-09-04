@@ -194,7 +194,7 @@ def update_photo_fields(public_id, **updates):
             context.pop(k, None)
         else:
             context[k] = str(v)
-    cloudinary.api.update_resource(public_id, context=context)
+    cloudinary.api.update(public_id, context=context)
 
 
 def get_random_hero():

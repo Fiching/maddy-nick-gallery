@@ -65,15 +65,27 @@ def fake_rename(from_id, to_id):
     STORE[to_id] = STORE.pop(from_id)
     return {"public_id": to_id}
 
-appmod.cloudinary.api.resources = fake_resources
-appmod.cloudinary.api.resource = fake_resource
-appmod.cloudinary.api.update_resource = fake_update_resource
-appmod.cloudinary.api.delete_resources = fake_delete_resources
-appmod.cloudinary.api.delete_resources_by_prefix = fake_delete_resources_by_prefix
-appmod.cloudinary.api.delete_folder = fake_delete_folder
-appmod.cloudinary.api.subfolders = fake_subfolders
-appmod.cloudinary.uploader.rename = fake_rename
-appmod.cloudinary.api.usage = lambda: {"credits": {"used_percent": 5}}
+# Patch via setattr on the *real* modules only, and refuse to patch a name
+# that doesn't already exist on them -- this is what would have caught the
+# `update_resource` vs. the SDK's real `update` naming bug: patching a
+# nonexistent name used to silently create it, so the fake API "worked"
+# while the real Cloudinary SDK would raise AttributeError in production.
+def patch(module, name, fake):
+    assert hasattr(module, name), (
+        f"{module.__name__}.{name} does not exist on the real cloudinary SDK -- "
+        f"app.py is calling a method that isn't real."
+    )
+    setattr(module, name, fake)
+
+patch(appmod.cloudinary.api, "resources", fake_resources)
+patch(appmod.cloudinary.api, "resource", fake_resource)
+patch(appmod.cloudinary.api, "update", fake_update_resource)
+patch(appmod.cloudinary.api, "delete_resources", fake_delete_resources)
+patch(appmod.cloudinary.api, "delete_resources_by_prefix", fake_delete_resources_by_prefix)
+patch(appmod.cloudinary.api, "delete_folder", fake_delete_folder)
+patch(appmod.cloudinary.api, "subfolders", fake_subfolders)
+patch(appmod.cloudinary.uploader, "rename", fake_rename)
+patch(appmod.cloudinary.api, "usage", lambda: {"credits": {"used_percent": 5}})
 
 # ---------- seed some data ----------
 seed("ireland-2026", ["a.jpg", "b.jpg", "c.jpg"])
