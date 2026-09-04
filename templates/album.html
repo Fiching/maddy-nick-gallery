@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} · {{ site_title }}{% endblock %}
+{% block content %}
+  <div class="album-header">
+    <a class="back-link" href="{{ url_for('index') }}">&larr; All albums</a>
+    <h1>{{ title }}</h1>
+    {% if photos %}
+      <button class="button" id="slideshow-start">Start slideshow</button>
+    {% endif %}
+  </div>
+
+  {% if photos %}
+    <div class="photo-grid">
+      {% for p in photos %}
+        <button class="photo-thumb" data-index="{{ loop.index0 }}" aria-label="Open photo{% if p.caption %}: {{ p.caption }}{% endif %}">
+          <img src="{{ p.thumb_url }}" alt="" loading="{{ 'eager' if loop.index0 < 8 else 'lazy' }}" decoding="async">
+        </button>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <p>No photos in this album yet.</p>
+      <a class="button" href="{{ url_for('upload') }}">Add photos</a>
+    </div>
+  {% endif %}
+
+  <div class="lightbox" id="lightbox" hidden>
+    <button class="lightbox-close" id="lightbox-close" aria-label="Close">&times;</button>
+    <button class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Previous">&#10094;</button>
+    <img class="lightbox-img" id="lightbox-img" src="" alt="">
+    <button class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="Next">&#10095;</button>
+    <div class="lightbox-caption" id="lightbox-caption"></div>
+    <button class="lightbox-autoplay" id="lightbox-autoplay">Autoplay</button>
+  </div>
+
+  <script>
+    window.PHOTOS = [
+      {% for p in photos %}
+      {full: {{ p.full_url|tojson }}, caption: {{ p.caption|tojson }}},
+      {% endfor %}
+    ];
+  </script>
+  <script src="{{ url_for('static', filename='lightbox.js') }}"></script>
+{% endblock %}

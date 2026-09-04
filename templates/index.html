@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ site_title }}{% endblock %}
+{% block content %}
+  <section class="hero">
+    <h1>{{ site_title }}</h1>
+    <p class="tagline">Trip albums and photo galleries, all in one place.</p>
+  </section>
+
+  {% if albums %}
+    <div class="album-grid">
+      {% for a in albums %}
+        <a class="album-card" href="{{ url_for('album', slug=a.slug) }}">
+          <div class="album-cover">
+            {% if a.cover_url %}
+              <img src="{{ a.cover_url }}" alt="" loading="{{ 'eager' if loop.index0 == 0 else 'lazy' }}" decoding="async">
+            {% endif %}
+          </div>
+          <div class="album-card-title">{{ a.title }}</div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <p>No albums yet.</p>
+      <a class="button" href="{{ url_for('upload') }}">Add the first photos</a>
+    </div>
+  {% endif %}
+{% endblock %}

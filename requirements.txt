@@ -1,0 +1,4 @@
+Flask==3.0.3
+gunicorn==22.0.0
+cloudinary==1.41.0
+python-dotenv==1.0.1

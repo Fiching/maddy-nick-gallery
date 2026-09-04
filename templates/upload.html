@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Upload · {{ site_title }}{% endblock %}
+{% block content %}
+  <div class="form-card">
+    <h1>Add photos</h1>
+    <form method="post" enctype="multipart/form-data" id="upload-form">
+      <label for="existing_album">Add to an existing album</label>
+      <select id="existing_album" name="existing_album">
+        <option value="">— choose an album —</option>
+        {% for a in albums %}
+          <option value="{{ a.slug }}">{{ a.title }}</option>
+        {% endfor %}
+      </select>
+
+      <div class="or-divider">or</div>
+
+      <label for="new_album_title">Start a new album</label>
+      <input type="text" id="new_album_title" name="new_album_title" placeholder="e.g. Ireland 2026">
+
+      <label for="caption">Caption (applies to all photos in this batch, optional)</label>
+      <input type="text" id="caption" name="caption" placeholder="Cliffs of Moher, day 3">
+
+      <label for="files">Photos</label>
+      <input type="file" id="files" name="files" accept="image/*,.heic,.heif" multiple required>
+      <p class="hint">On cellular, uploading a lot of full-size photos can take a minute or two — keep this tab open until it finishes.</p>
+
+      <button class="button" type="submit" id="upload-submit">Upload</button>
+
+      <div class="upload-progress" id="upload-progress" hidden>
+        <div class="upload-progress-track">
+          <div class="upload-progress-bar" id="upload-progress-bar"></div>
+        </div>
+        <div class="upload-progress-label" id="upload-progress-label">Uploading…</div>
+      </div>
+    </form>
+  </div>
+  <script src="{{ url_for('static', filename='upload.js') }}"></script>
+{% endblock %}
