@@ -1,5 +1,7 @@
 import os
 import re
+import time
+import logging
 import functools
 from datetime import datetime
 
@@ -11,6 +13,9 @@ from flask import (
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("maddy-nick-gallery")
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
@@ -33,6 +38,9 @@ if CLOUDINARY_CONFIGURED:
 
 ALBUMS_ROOT = "albums"
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "webp", "heic", "heif"}
+
+_usage_cache = {"percent": None, "checked_at": 0}
+USAGE_CACHE_SECONDS = 30 * 60  # only check Cloudinary's usage API every 30 minutes
 
 
 # ---------- helpers ----------
@@ -133,11 +141,41 @@ def list_photos(slug):
     return photos
 
 
+def get_storage_percent():
+    """Return an int 0-100 for how much of the Cloudinary free monthly plan
+    has been used (storage + bandwidth + transformations combined, per
+    Cloudinary's own 'credits' figure), or None if unknown. Cached for
+    USAGE_CACHE_SECONDS so we don't hit Cloudinary's Admin API on every
+    page view."""
+    if not CLOUDINARY_CONFIGURED:
+        return None
+
+    now = time.time()
+    if _usage_cache["percent"] is not None and now - _usage_cache["checked_at"] < USAGE_CACHE_SECONDS:
+        return _usage_cache["percent"]
+
+    try:
+        usage = cloudinary.api.usage()
+        pct = usage.get("credits", {}).get("used_percent")
+        if pct is None:
+            return _usage_cache["percent"]  # stale-but-known beats nothing
+        pct = max(0, min(100, round(pct)))
+        _usage_cache["percent"] = pct
+        _usage_cache["checked_at"] = now
+        return pct
+    except Exception:
+        logger.exception("Could not fetch Cloudinary usage")
+        return _usage_cache["percent"]
+
+
 # ---------- routes ----------
 
 @app.context_processor
 def inject_globals():
-    return {"site_title": SITE_TITLE}
+    return {
+        "site_title": SITE_TITLE,
+        "storage_percent": get_storage_percent() if session.get("authed") else None,
+    }
 
 
 @app.route("/")
@@ -222,7 +260,8 @@ def upload():
                     context={"caption": caption} if caption else None,
                 )
                 uploaded += 1
-            except Exception as e:
+            except Exception:
+                logger.exception("Upload failed for file %r in album %r", f.filename, slug)
                 skipped += 1
 
         if uploaded:

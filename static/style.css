@@ -261,6 +261,31 @@ main {
   font-size: 0.85rem;
 }
 
+.storage-bar {
+  max-width: 220px;
+  margin: 0 auto 0.85rem;
+}
+
+.storage-bar-track {
+  background: var(--border);
+  border-radius: 999px;
+  height: 6px;
+  overflow: hidden;
+}
+
+.storage-bar-fill {
+  background: var(--accent);
+  height: 100%;
+  border-radius: 999px;
+}
+
+.storage-bar-label {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
 /* lightbox */
 .lightbox {
   position: fixed;

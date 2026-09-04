@@ -33,6 +33,12 @@
   </main>
 
   <footer class="site-footer">
+    {% if storage_percent is not none %}
+      <div class="storage-bar" title="Storage, viewing and photo processing combined — resets monthly">
+        <div class="storage-bar-track"><div class="storage-bar-fill" style="width: {{ storage_percent }}%"></div></div>
+        <span class="storage-bar-label">{{ storage_percent }}% of free plan used this month</span>
+      </div>
+    {% endif %}
     <span>{{ site_title }}</span>
   </footer>
 </body>
