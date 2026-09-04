@@ -67,6 +67,44 @@ main {
 .hero h1 { margin-bottom: 0.25rem; font-size: 2rem; }
 .tagline { color: var(--muted); margin-top: 0; }
 
+.hero-photo {
+  display: block;
+  position: relative;
+  margin: 1rem 0 1.5rem;
+  border-radius: 14px;
+  overflow: hidden;
+  aspect-ratio: 16 / 7;
+  background: var(--border);
+  text-decoration: none;
+}
+
+.hero-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hero-photo-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 2rem 1.25rem 1rem;
+  background: linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0));
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.hero-photo-caption span:first-child { font-weight: 700; font-size: 1.1rem; }
+.hero-photo-subcaption { font-size: 0.85rem; opacity: 0.85; }
+
+@media (max-width: 640px) {
+  .hero-photo { aspect-ratio: 4 / 5; }
+}
+
 .flash-wrap { max-width: 1100px; margin: 1rem auto 0; padding: 0 1.5rem; }
 .flash {
   padding: 0.75rem 1rem;
@@ -184,13 +222,75 @@ main {
   font-size: 0.9rem;
 }
 
-.photo-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+.album-manage {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 1.1rem;
+}
+
+.album-manage summary {
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--muted);
+  touch-action: manipulation;
+}
+
+.album-manage-body {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: flex-end;
+}
+
+.inline-form label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+}
+
+.inline-form-row {
+  display: flex;
   gap: 0.5rem;
 }
 
+.inline-form-row input[type=text] {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.button-small {
+  padding: 0.5rem 1rem;
+  min-height: 40px;
+  margin-top: 0;
+}
+
+.button-danger {
+  background: #a63b2b;
+  margin-top: 0;
+}
+
+.button-danger:hover { opacity: 0.9; }
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.photo-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
 .photo-thumb {
+  position: relative;
   aspect-ratio: 1 / 1;
   background-color: var(--border);
   border: none;
@@ -199,6 +299,7 @@ main {
   padding: 0;
   overflow: hidden;
   touch-action: manipulation;
+  width: 100%;
 }
 
 .photo-thumb img {
@@ -207,6 +308,41 @@ main {
   object-fit: cover;
   display: block;
 }
+
+.cover-badge {
+  position: absolute;
+  top: 0.4rem;
+  left: 0.4rem;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+}
+
+.photo-tile-controls {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.photo-tile-form { display: contents; }
+
+.icon-button {
+  flex: 1;
+  min-height: 36px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  touch-action: manipulation;
+}
+
+.icon-button:hover { color: var(--ink); background: var(--border); }
+.icon-button:disabled { opacity: 0.35; cursor: default; }
+.icon-button-danger:hover { color: #a63b2b; border-color: #a63b2b; }
 
 .form-card {
   max-width: 480px;

@@ -9,12 +9,52 @@
     {% endif %}
   </div>
 
+  <details class="album-manage">
+    <summary>Manage album</summary>
+    <div class="album-manage-body">
+      <form method="post" action="{{ url_for('rename_album', slug=slug) }}" class="inline-form">
+        <label for="new_title">Rename this album</label>
+        <div class="inline-form-row">
+          <input type="text" id="new_title" name="new_title" value="{{ title }}" required>
+          <button class="button button-small" type="submit">Save</button>
+        </div>
+      </form>
+
+      <form method="post" action="{{ url_for('delete_album', slug=slug) }}"
+            onsubmit="return confirm('Delete the entire &quot;{{ title }}&quot; album and all {{ photos|length }} photo(s) in it? This cannot be undone.');">
+        <button class="button button-danger" type="submit">Delete this whole album&hellip;</button>
+      </form>
+    </div>
+  </details>
+
   {% if photos %}
     <div class="photo-grid">
       {% for p in photos %}
-        <button class="photo-thumb" data-index="{{ loop.index0 }}" aria-label="Open photo{% if p.caption %}: {{ p.caption }}{% endif %}">
-          <img src="{{ p.thumb_url }}" alt="" loading="{{ 'eager' if loop.index0 < 8 else 'lazy' }}" decoding="async">
-        </button>
+        <div class="photo-tile">
+          <button class="photo-thumb" data-index="{{ loop.index0 }}" aria-label="Open photo{% if p.caption %}: {{ p.caption }}{% endif %}">
+            <img src="{{ p.thumb_url }}" alt="" loading="{{ 'eager' if loop.index0 < 8 else 'lazy' }}" decoding="async">
+            {% if p.is_cover %}<span class="cover-badge">Cover</span>{% endif %}
+          </button>
+          <div class="photo-tile-controls">
+            <form method="post" action="{{ url_for('move_photo', slug=slug, public_id=p.public_id) }}" class="photo-tile-form">
+              <input type="hidden" name="direction" value="up">
+              <button type="submit" class="icon-button" aria-label="Move earlier" {% if loop.index0 == 0 %}disabled{% endif %}>&larr;</button>
+            </form>
+            <form method="post" action="{{ url_for('move_photo', slug=slug, public_id=p.public_id) }}" class="photo-tile-form">
+              <input type="hidden" name="direction" value="down">
+              <button type="submit" class="icon-button" aria-label="Move later" {% if loop.index0 == photos|length - 1 %}disabled{% endif %}>&rarr;</button>
+            </form>
+            {% if not p.is_cover %}
+              <form method="post" action="{{ url_for('set_cover', slug=slug, public_id=p.public_id) }}" class="photo-tile-form">
+                <button type="submit" class="icon-button" aria-label="Set as album cover">&#9733;</button>
+              </form>
+            {% endif %}
+            <form method="post" action="{{ url_for('delete_photo', slug=slug, public_id=p.public_id) }}" class="photo-tile-form"
+                  onsubmit="return confirm('Delete this photo? This cannot be undone.');">
+              <button type="submit" class="icon-button icon-button-danger" aria-label="Delete photo">&times;</button>
+            </form>
+          </div>
+        </div>
       {% endfor %}
     </div>
   {% else %}
