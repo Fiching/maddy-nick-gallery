@@ -1,19 +1,28 @@
 # Maddy & Nick's Gallery
 
-A small photo gallery/slideshow site: browse trip albums publicly, upload new
-photos behind a single shared password. Built with Flask; photo storage,
-resizing, and delivery is handled by Cloudinary's free tier, so the app
-itself is completely stateless and can run on Render's free plan.
+A small photo gallery/slideshow site, gated behind a single shared password
+for both viewing and uploading. Built with Flask; photo storage, resizing,
+and delivery is handled by Cloudinary's free tier, so the app itself is
+completely stateless and can run on Render's free plan.
 
 ## How it works
 
 - Albums are just Cloudinary folders under `albums/<slug>/`. Creating a new
   album is done from the Upload page — no code changes or redeploys needed.
-- Uploading requires logging in with one shared password (`UPLOAD_PASSWORD`).
-  Viewing albums is public, so you can share a link with family.
+- The whole site — viewing and uploading — requires logging in with one
+  shared password (`UPLOAD_PASSWORD`).
+- Uploads go straight from the browser to Cloudinary (the Flask app only
+  hands out a short-lived signed upload request per photo). This app's
+  server never sees the photo bytes, so a big batch can't hit its request
+  size or timeout limits — see `static/upload.js` and the `/upload/sign`
+  route in `app.py` if you're changing how uploads work.
 - Cloudinary auto-generates resized, optimized versions of every photo for
   the grid and the full-screen slideshow (and converts iPhone HEIC photos to
   something every browser can display).
+- The homepage shows a random photo from a random album as a hero banner.
+  Each album has controls to rename it, reorder photos, set a cover photo,
+  and delete a photo or the whole album (with a confirmation on every
+  delete).
 
 ## Run it locally
 
@@ -66,6 +75,4 @@ first upload. No code changes required.
 
 - Per-photo captions (currently one caption applies to a whole upload batch)
 - Downloading a whole album as a zip
-- A "delete photo" control (currently deletions happen from the Cloudinary
-  dashboard directly)
-- Optional password on viewing, not just uploading
+- Drag-and-drop photo reordering (currently move-earlier/move-later buttons)

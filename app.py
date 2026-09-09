@@ -8,19 +8,20 @@ from datetime import datetime
 
 from flask import (
     Flask, render_template, request, redirect, url_for,
-    session, flash, abort
+    session, flash, abort, jsonify
 )
 
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
+import cloudinary.utils
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("maddy-nick-gallery")
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
-app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024  # 200MB per request (batch uploads)
+app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024  # photo bytes go straight to Cloudinary now; this app never sees them
 
 SITE_TITLE = os.environ.get("SITE_TITLE", "Maddy & Nick")
 UPLOAD_PASSWORD = os.environ.get("UPLOAD_PASSWORD")
@@ -38,6 +39,9 @@ if CLOUDINARY_CONFIGURED:
     )
 
 ALBUMS_ROOT = "albums"
+# Kept as the source of truth for what's allowed; the actual filtering now
+# happens client-side in static/upload.js (mirror this list if it changes),
+# since file bytes go straight from the browser to Cloudinary.
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "webp", "heic", "heif"}
 
 _usage_cache = {"percent": None, "checked_at": 0}
@@ -57,10 +61,6 @@ def slugify(text):
 
 def prettify(slug):
     return slug.replace("-", " ").title()
-
-
-def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def login_required(view):
@@ -309,63 +309,64 @@ def logout():
     return redirect(url_for("login"))
 
 
-@app.route("/upload", methods=["GET", "POST"])
+@app.route("/upload", methods=["GET"])
 @login_required
 def upload():
-    if request.method == "POST":
-        if not CLOUDINARY_CONFIGURED:
-            flash("Photo storage isn't configured yet — see README.", "error")
-            return redirect(url_for("upload"))
-
-        new_title = request.form.get("new_album_title", "").strip()
-        existing_slug = request.form.get("existing_album", "").strip()
-        caption = request.form.get("caption", "").strip()
-
-        if new_title:
-            slug = slugify(new_title)
-        elif existing_slug:
-            slug = existing_slug
-        else:
-            flash("Choose an existing album or name a new one.", "error")
-            return redirect(url_for("upload"))
-
-        if not slug:
-            flash("That album name didn't work — try letters and numbers.", "error")
-            return redirect(url_for("upload"))
-
-        files = [f for f in request.files.getlist("files") if f and f.filename]
-        if not files:
-            flash("Pick at least one photo to upload.", "error")
-            return redirect(url_for("upload"))
-
-        uploaded, skipped = 0, 0
-        for f in files:
-            if not allowed_file(f.filename):
-                skipped += 1
-                continue
-            try:
-                cloudinary.uploader.upload(
-                    f,
-                    folder=f"{ALBUMS_ROOT}/{slug}",
-                    use_filename=True,
-                    unique_filename=True,
-                    overwrite=False,
-                    context={"caption": caption} if caption else None,
-                )
-                uploaded += 1
-            except Exception:
-                logger.exception("Upload failed for file %r in album %r", f.filename, slug)
-                skipped += 1
-
-        if uploaded:
-            flash(f"Uploaded {uploaded} photo(s) to \"{prettify(slug)}\".", "success")
-        if skipped:
-            flash(f"Skipped {skipped} file(s) (unsupported type or upload error).", "warning")
-
-        return redirect(url_for("album", slug=slug))
-
     albums = list_albums()
     return render_template("upload.html", albums=albums)
+
+
+@app.route("/upload/sign", methods=["POST"])
+@login_required
+def sign_upload():
+    """Issue a short-lived signature so the browser can upload photos
+    straight to Cloudinary, bypassing this server entirely.
+
+    That's deliberate: routing every photo's bytes through this Flask app
+    meant a big batch could exceed the app's own request-size cap, and a
+    slow phone connection could exceed gunicorn's request timeout, killing
+    the whole batch with nothing uploaded. Signing a request per photo and
+    uploading directly to Cloudinary removes both limits -- this app never
+    sees the photo bytes at all, so its own size/time limits don't apply
+    to them.
+    """
+    if not CLOUDINARY_CONFIGURED:
+        return jsonify({"error": "Photo storage isn't configured yet — see README."}), 400
+
+    data = request.get_json(silent=True) or {}
+    new_title = (data.get("new_album_title") or "").strip()
+    existing_slug = (data.get("existing_album") or "").strip()
+    caption = (data.get("caption") or "").strip()
+
+    if new_title:
+        slug = slugify(new_title)
+    elif existing_slug:
+        slug = slugify(existing_slug)
+    else:
+        return jsonify({"error": "Choose an existing album or name a new one."}), 400
+
+    if not slug:
+        return jsonify({"error": "That album name didn't work — try letters and numbers."}), 400
+
+    params_to_sign = {
+        "timestamp": int(time.time()),
+        "folder": f"{ALBUMS_ROOT}/{slug}",
+        "use_filename": "true",
+        "unique_filename": "true",
+        "overwrite": "false",
+    }
+    if caption:
+        params_to_sign["context"] = cloudinary.utils.encode_context({"caption": caption})
+
+    signature = cloudinary.utils.api_sign_request(params_to_sign, cloudinary.config().api_secret)
+
+    return jsonify({
+        "slug": slug,
+        "cloud_name": cloudinary.config().cloud_name,
+        "api_key": cloudinary.config().api_key,
+        "signature": signature,
+        **params_to_sign,
+    })
 
 
 @app.route("/album/<slug>/rename", methods=["POST"])
