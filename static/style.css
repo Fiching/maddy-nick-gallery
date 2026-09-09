@@ -381,6 +381,15 @@ main {
   margin: 0.4rem 0 0;
 }
 
+a.hint {
+  display: inline-block;
+  color: var(--accent);
+  text-decoration: underline;
+  min-height: 44px;
+  line-height: 44px;
+  touch-action: manipulation;
+}
+
 .or-divider {
   text-align: center;
   color: var(--muted);
