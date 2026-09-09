@@ -6,6 +6,11 @@
     <h1>{{ title }}</h1>
     {% if photos %}
       <button class="button" id="slideshow-start">Start slideshow</button>
+      <button class="button button-small" id="select-toggle" type="button">Select photos</button>
+      <form method="post" action="{{ url_for('download_photos', slug=slug) }}">
+        <input type="hidden" name="all" value="1">
+        <button class="button button-small" type="submit">Download album</button>
+      </form>
     {% endif %}
   </div>
 
@@ -28,13 +33,18 @@
   </details>
 
   {% if photos %}
-    <div class="photo-grid">
+    <div class="photo-grid" id="photo-grid">
       {% for p in photos %}
-        <div class="photo-tile">
-          <button class="photo-thumb" data-index="{{ loop.index0 }}" aria-label="Open photo{% if p.caption %}: {{ p.caption }}{% endif %}">
-            <img src="{{ p.thumb_url }}" alt="" loading="{{ 'eager' if loop.index0 < 8 else 'lazy' }}" decoding="async">
-            {% if p.is_cover %}<span class="cover-badge">Cover</span>{% endif %}
-          </button>
+        <div class="photo-tile" data-public-id="{{ p.public_id }}" data-download-url="{{ p.download_url }}">
+          <div class="photo-thumb-wrap">
+            <button class="photo-thumb" data-index="{{ loop.index0 }}" aria-label="Open photo{% if p.caption %}: {{ p.caption }}{% endif %}">
+              <img src="{{ p.thumb_url }}" alt="" loading="{{ 'eager' if loop.index0 < 8 else 'lazy' }}" decoding="async">
+              {% if p.is_cover %}<span class="cover-badge">Cover</span>{% endif %}
+            </button>
+            <label class="select-checkbox-label" aria-hidden="true">
+              <input type="checkbox" class="select-checkbox" aria-label="Select this photo">
+            </label>
+          </div>
           <div class="photo-tile-controls">
             <form method="post" action="{{ url_for('move_photo', slug=slug, public_id=p.public_id) }}" class="photo-tile-form">
               <input type="hidden" name="direction" value="up">
@@ -64,6 +74,15 @@
     </div>
   {% endif %}
 
+  <div class="select-bar" id="select-bar" hidden>
+    <label class="select-all-label">
+      <input type="checkbox" id="select-all-checkbox"> Select all
+    </label>
+    <span id="select-count">0 selected</span>
+    <button type="button" class="button button-small" id="select-download-btn">Download</button>
+  </div>
+  <form method="post" action="{{ url_for('download_photos', slug=slug) }}" id="select-download-form" hidden></form>
+
   <div class="lightbox" id="lightbox" hidden>
     <button class="lightbox-close" id="lightbox-close" aria-label="Close">&times;</button>
     <button class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Previous">&#10094;</button>
@@ -81,4 +100,5 @@
     ];
   </script>
   <script src="{{ url_for('static', filename='lightbox.js') }}"></script>
+  <script src="{{ url_for('static', filename='select.js') }}"></script>
 {% endblock %}
