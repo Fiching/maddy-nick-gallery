@@ -344,6 +344,84 @@ main {
 .icon-button:disabled { opacity: 0.35; cursor: default; }
 .icon-button-danger:hover { color: #a63b2b; border-color: #a63b2b; }
 
+.photo-thumb-wrap { position: relative; }
+
+.select-checkbox-label {
+  display: none;
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 50%;
+  touch-action: manipulation;
+}
+
+.photo-grid.selecting .select-checkbox-label { display: flex; }
+
+.select-checkbox {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+}
+
+.photo-grid.selecting .photo-thumb { cursor: pointer; }
+.photo-grid.selecting { padding-bottom: 5rem; } /* keep the last row clear of the fixed select bar */
+
+.photo-tile.selected .photo-thumb {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+}
+
+.select-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+  padding: 0.85rem 1.25rem max(0.85rem, env(safe-area-inset-bottom));
+}
+
+.select-bar[hidden] { display: none; } /* .select-bar's own `display: flex` otherwise beats the hidden attribute */
+
+.select-all-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.select-all-label input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+#select-count {
+  color: var(--muted);
+  font-size: 0.9rem;
+  flex: 1;
+}
+
+#select-download-btn {
+  margin-top: 0;
+}
+
+#select-download-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .form-card {
   max-width: 480px;
   margin: 1.5rem auto;
@@ -389,6 +467,8 @@ a.hint {
   line-height: 44px;
   touch-action: manipulation;
 }
+
+a.hint[hidden] { display: none; } /* a.hint's own `display` otherwise beats the hidden attribute */
 
 .or-divider {
   text-align: center;
