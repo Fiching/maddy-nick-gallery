@@ -22,7 +22,7 @@
 
       <label for="files">Photos</label>
       <input type="file" id="files" name="files" accept="image/*,.heic,.heif" multiple required>
-      <p class="hint">On cellular, uploading a lot of full-size photos can take a minute or two — keep this tab open until it finishes.</p>
+      <p class="hint">Photos upload straight from your phone to storage, a few at a time — keep this tab open until it finishes. If a few fail on a bad connection, only those need a retry.</p>
 
       <button class="button" type="submit" id="upload-submit">Upload</button>
 
@@ -31,6 +31,7 @@
           <div class="upload-progress-bar" id="upload-progress-bar"></div>
         </div>
         <div class="upload-progress-label" id="upload-progress-label">Uploading…</div>
+        <a class="hint" id="upload-open-album" href="#" hidden>Skip retrying and view the album →</a>
       </div>
     </form>
   </div>
