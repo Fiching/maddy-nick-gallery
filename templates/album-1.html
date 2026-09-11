@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} · {{ site_title }}{% endblock %}
+{% block content %}
+  <div class="album-header">
+    <a class="back-link" href="{{ url_for('index') }}">&larr; All albums</a>
+    <h1>{{ title }}</h1>
+    {% if photos %}
+      <button class="button" id="slideshow-start">Start slideshow</button>
+      <button class="button button-small" id="select-toggle" type="button">Select photos</button>
+      <form method="post" action="{{ url_for('download_photos', slug=slug) }}">
+        <input type="hidden" name="all" value="1">
+        <button class="button button-small" type="submit">Download album</button>
+      </form>
+    {% endif %}
+  </div>
+
+  {% if session.get('authed') %}
+  <details class="album-manage">
+    <summary>Manage album</summary>
+    <div class="album-manage-body">
+      <form method="post" action="{{ url_for('rename_album', slug=slug) }}" class="inline-form">
+        <label for="new_title">Rename this album</label>
+        <div class="inline-form-row">
+          <input type="text" id="new_title" name="new_title" value="{{ title }}" required>
+          <button class="button button-small" type="submit">Save</button>
+        </div>
+      </form>
+
+      <form method="post" action="{{ url_for('delete_album', slug=slug) }}"
+            onsubmit="return confirm('Delete the entire &quot;{{ title }}&quot; album and all {{ photos|length }} photo(s) in it? This cannot be undone.');">
+        <button class="button button-danger" type="submit">Delete this whole album&hellip;</button>
+      </form>
+    </div>
+  </details>
+  {% endif %}
+
+  {% if photos %}
+    <div class="photo-grid" id="photo-grid">
+      {% for p in photos %}
+        <div class="photo-tile" data-public-id="{{ p.public_id }}" data-download-url="{{ p.download_url }}">
+          <div class="photo-thumb-wrap">
+            <button class="photo-thumb" data-index="{{ loop.index0 }}" aria-label="Open photo{% if p.caption %}: {{ p.caption }}{% endif %}">
+              <img src="{{ p.thumb_url }}" alt="" loading="{{ 'eager' if loop.index0 < 8 else 'lazy' }}" decoding="async">
+              {% if p.is_cover %}<span class="cover-badge">Cover</span>{% endif %}
+            </button>
+            <label class="select-checkbox-label" aria-hidden="true">
+              <input type="checkbox" class="select-checkbox" aria-label="Select this photo">
+            </label>
+          </div>
+          {% if session.get('authed') %}
+          <div class="photo-tile-controls">
+            <form method="post" action="{{ url_for('move_photo', slug=slug, public_id=p.public_id) }}" class="photo-tile-form">
+              <input type="hidden" name="direction" value="up">
+              <button type="submit" class="icon-button" aria-label="Move earlier" {% if loop.index0 == 0 %}disabled{% endif %}>&larr;</button>
+            </form>
+            <form method="post" action="{{ url_for('move_photo', slug=slug, public_id=p.public_id) }}" class="photo-tile-form">
+              <input type="hidden" name="direction" value="down">
+              <button type="submit" class="icon-button" aria-label="Move later" {% if loop.index0 == photos|length - 1 %}disabled{% endif %}>&rarr;</button>
+            </form>
+            {% if not p.is_cover %}
+              <form method="post" action="{{ url_for('set_cover', slug=slug, public_id=p.public_id) }}" class="photo-tile-form">
+                <button type="submit" class="icon-button" aria-label="Set as album cover">&#9733;</button>
+              </form>
+            {% endif %}
+            <form method="post" action="{{ url_for('delete_photo', slug=slug, public_id=p.public_id) }}" class="photo-tile-form"
+                  onsubmit="return confirm('Delete this photo? This cannot be undone.');">
+              <button type="submit" class="icon-button icon-button-danger" aria-label="Delete photo">&times;</button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <p>No photos in this album yet.</p>
+      {% if session.get('authed') %}
+        <a class="button" href="{{ url_for('upload') }}">Add photos</a>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <div class="select-bar" id="select-bar" hidden>
+    <label class="select-all-label">
+      <input type="checkbox" id="select-all-checkbox"> Select all
+    </label>
+    <span id="select-count">0 selected</span>
+    <button type="button" class="button button-small" id="select-download-btn">Download</button>
+  </div>
+  <form method="post" action="{{ url_for('download_photos', slug=slug) }}" id="select-download-form" hidden></form>
+
+  <div class="lightbox" id="lightbox" hidden>
+    <button class="lightbox-close" id="lightbox-close" aria-label="Close">&times;</button>
+    <button class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Previous">&#10094;</button>
+    <img class="lightbox-img" id="lightbox-img" src="" alt="">
+    <button class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="Next">&#10095;</button>
+    <div class="lightbox-caption" id="lightbox-caption"></div>
+    <button class="lightbox-autoplay" id="lightbox-autoplay">Autoplay</button>
+  </div>
+
+  <script>
+    window.PHOTOS = [
+      {% for p in photos %}
+      {full: {{ p.full_url|tojson }}, caption: {{ p.caption|tojson }}},
+      {% endfor %}
+    ];
+  </script>
+  <script src="{{ url_for('static', filename='lightbox.js') }}"></script>
+  <script src="{{ url_for('static', filename='select.js') }}"></script>
+{% endblock %}

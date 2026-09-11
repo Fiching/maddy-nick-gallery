@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}{{ site_title }}{% endblock %}
+{% block content %}
+  {% if hero %}
+    <a class="hero-photo" href="{{ url_for('album', slug=hero.slug) }}">
+      <img src="{{ hero.url }}" alt="{{ hero.caption }}" loading="eager" decoding="async">
+      <div class="hero-photo-caption">
+        <span>{{ hero.album_title }}</span>
+        {% if hero.caption %}<span class="hero-photo-subcaption">{{ hero.caption }}</span>{% endif %}
+      </div>
+    </a>
+  {% else %}
+    <section class="hero">
+      <h1>{{ site_title }}</h1>
+      <p class="tagline">Trip albums and photo galleries, all in one place.</p>
+    </section>
+  {% endif %}
+
+  {% if albums %}
+    <div class="album-grid">
+      {% for a in albums %}
+        <a class="album-card" href="{{ url_for('album', slug=a.slug) }}">
+          <div class="album-cover">
+            {% if a.cover_url %}
+              <img src="{{ a.cover_url }}" alt="" loading="{{ 'eager' if loop.index0 == 0 else 'lazy' }}" decoding="async">
+            {% endif %}
+          </div>
+          <div class="album-card-title">{{ a.title }}</div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <p>No albums yet.</p>
+      {% if session.get('authed') %}
+        <a class="button" href="{{ url_for('upload') }}">Add the first photos</a>
+      {% endif %}
+    </div>
+  {% endif %}
+{% endblock %}
