@@ -52,8 +52,13 @@ def check(name, cond):
     results.append(cond)
 
 with appmod.app.test_client() as anon:
+    # Downloading is a viewing action, not an edit -- it's public, same as
+    # browsing the album itself. See check_public_access.py for the full
+    # public/private split (viewing + downloading are public; uploads,
+    # deletes, renames, reordering, and cover changes still require login).
     r = anon.post("/album/ireland-2026/download", data={"all": "1"})
-    check("download requires login (redirects, no zip built)", r.status_code == 302 and "/login" in r.headers["Location"])
+    check("download works without login", r.status_code == 302 and len(zip_calls) == 1)
+    zip_calls.clear()
 
 with appmod.app.test_client() as c:
     c.post("/login", data={"password": "testpass123"})
