@@ -270,7 +270,6 @@ def inject_globals():
 
 
 @app.route("/")
-@login_required
 def index():
     if not CLOUDINARY_CONFIGURED:
         flash(
@@ -284,7 +283,6 @@ def index():
 
 
 @app.route("/album/<slug>")
-@login_required
 def album(slug):
     slug = slugify(slug)
     photos = list_photos(slug)
@@ -481,7 +479,6 @@ def set_cover(slug, public_id):
 
 
 @app.route("/album/<slug>/download", methods=["POST"])
-@login_required
 def download_photos(slug):
     """Hand the browser off to a Cloudinary-generated zip of the requested
     photos. Cloudinary builds the archive on its own end -- this app just

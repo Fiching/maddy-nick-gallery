@@ -1,16 +1,24 @@
 # Maddy & Nick's Gallery
 
-A small photo gallery/slideshow site, gated behind a single shared password
-for both viewing and uploading. Built with Flask; photo storage, resizing,
-and delivery is handled by Cloudinary's free tier, so the app itself is
-completely stateless and can run on Render's free plan.
+A small photo gallery/slideshow site: anyone with the link can browse
+albums, view photos, and download them — no login needed. Making any
+change (uploading, deleting, renaming, reordering, setting a cover photo)
+requires logging in with a single shared password. Built with
+Flask; photo storage, resizing, and delivery is handled by Cloudinary's free
+tier, so the app itself is completely stateless and can run on Render's
+free plan.
 
 ## How it works
 
 - Albums are just Cloudinary folders under `albums/<slug>/`. Creating a new
   album is done from the Upload page — no code changes or redeploys needed.
-- The whole site — viewing and uploading — requires logging in with one
-  shared password (`UPLOAD_PASSWORD`).
+- Viewing, browsing, and downloading are public — share the site link with
+  family and they can look through albums and save photos without a
+  password. Uploading, deleting, renaming, reordering, and setting a cover
+  photo all require logging in with one shared password
+  (`UPLOAD_PASSWORD`); the "Upload" link and every editing control
+  (Manage album, move/cover/delete buttons on each photo) are hidden from
+  the page entirely unless you're logged in.
 - Uploads go straight from the browser to Cloudinary (the Flask app only
   hands out a short-lived signed upload request per photo). This app's
   server never sees the photo bytes, so a big batch can't hit its request
@@ -20,9 +28,9 @@ completely stateless and can run on Render's free plan.
   the grid and the full-screen slideshow (and converts iPhone HEIC photos to
   something every browser can display).
 - The homepage shows a random photo from a random album as a hero banner.
-  Each album has controls to rename it, reorder photos, set a cover photo,
-  and delete a photo or the whole album (with a confirmation on every
-  delete).
+  Each album has controls (once logged in) to rename it, reorder photos,
+  set a cover photo, and delete a photo or the whole album (with a
+  confirmation on every delete).
 
 ## Run it locally
 
@@ -42,7 +50,8 @@ Visit http://localhost:5000
    Cloud Name, API Key, and API Secret from the dashboard into `.env`
    (locally) or your host's environment variables (in production).
 2. **Pick a shared password** for `UPLOAD_PASSWORD` — this is what you and
-   Maddy will use to log in and upload.
+   Maddy will use to log in and make changes. Family you share the site
+   link with never needs it just to look at photos.
 3. **Set `SECRET_KEY`** to any random string (used to sign login sessions).
 
 ## Deploying to Render (same flow as your other projects)
